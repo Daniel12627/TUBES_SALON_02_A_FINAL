@@ -21,13 +21,11 @@ Route::middleware('auth:sanctum')->group(function () {
         return response()->json(['message' => 'Logout berhasil']);
     });
 
-    // Pemesanan & Pembayaran (Pelanggan)
     Route::middleware('pelanggan')->group(function () {
         Route::post('/pemesanan/create', [PemesananController::class, 'store']);
         Route::post('/pembayaran/create', [PembayaranController::class, 'store']);
     });
 
-    // Admin + Pelanggan bisa akses
     Route::get('/pemesanan/read', [PemesananController::class, 'index']);
     Route::post('/pemesanan/update', [PemesananController::class, 'update']);
     Route::delete('/pemesanan/delete/{id}', [PemesananController::class, 'destroy']);
@@ -35,7 +33,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/pembayaran/read', [PembayaranController::class, 'index']);
     Route::get('/pembayaran/pendapatan', [PembayaranController::class, 'totalPendapatan']);
 
-    // Admin Only
     Route::middleware('admin')->group(function () {
         Route::post('/pegawai/create', [PegawaiController::class, 'store']);
         Route::get('/pegawai/read', [PegawaiController::class, 'index']);

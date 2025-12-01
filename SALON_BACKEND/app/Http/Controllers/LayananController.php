@@ -7,12 +7,6 @@ use Illuminate\Http\Request;
 
 class LayananController extends Controller
 {
-    public function __construct()
-    {
-        // Semua aksi hanya boleh ADMIN
-        $this->middleware('admin');
-    }
-
     public function index()
     {
         return response()->json(Layanan::all());
@@ -20,17 +14,13 @@ class LayananController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $data = $request->validate([
             'nama_layanan' => 'required',
             'deskripsi' => 'required',
             'harga' => 'required|numeric'
         ]);
 
-        $layanan = Layanan::create([
-            'nama_layanan' => $request->nama_layanan,
-            'deskripsi' => $request->deskripsi,
-            'harga' => $request->harga,
-        ]);
+        $layanan = Layanan::create($data);
 
         return response()->json([
             'message' => 'Layanan berhasil ditambahkan',
@@ -40,20 +30,15 @@ class LayananController extends Controller
 
     public function update(Request $request)
     {
-        $request->validate([
+        $data = $request->validate([
             'id_layanan' => 'required|exists:layanan,id_layanan',
             'nama_layanan' => 'required',
             'deskripsi' => 'required',
             'harga' => 'required|numeric'
         ]);
 
-        $layanan = Layanan::find($request->id_layanan);
-
-        $layanan->update([
-            'nama_layanan' => $request->nama_layanan,
-            'deskripsi' => $request->deskripsi,
-            'harga' => $request->harga,
-        ]);
+        $layanan = Layanan::findOrFail($request->id_layanan);
+        $layanan->update($data);
 
         return response()->json([
             'message' => 'Layanan berhasil diperbarui',
@@ -66,15 +51,11 @@ class LayananController extends Controller
         $layanan = Layanan::find($id_layanan);
 
         if (!$layanan) {
-            return response()->json([
-                'message' => 'Layanan tidak ditemukan'
-            ], 404);
+            return response()->json(['message' => 'Layanan tidak ditemukan'], 404);
         }
 
         $layanan->delete();
 
-        return response()->json([
-            'message' => 'Layanan berhasil dihapus'
-        ]);
+        return response()->json(['message' => 'Layanan berhasil dihapus']);
     }
 }

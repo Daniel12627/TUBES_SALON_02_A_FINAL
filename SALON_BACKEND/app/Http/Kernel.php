@@ -32,24 +32,22 @@ class Kernel extends HttpKernel
         ],
 
         'api' => [
-            'auth:sanctum',
             'throttle:api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
+
     ];
 
     /**
      * The application's route middleware.
      */
    protected $routeMiddleware = [
-    'auth' => \App\Http\Middleware\Authenticate::class,
-    'auth:sanctum' => \Laravel\Sanctum\Http\Middleware\CheckApiToken::class,
-
-    // Role Middleware
-    'admin' => \App\Http\Middleware\AdminMiddleware::class,
+    'auth'      => \App\Http\Middleware\Authenticate::class,
+    'admin'     => \App\Http\Middleware\AdminMiddleware::class,
     'pelanggan' => \App\Http\Middleware\PelangganMiddleware::class,
-
-    'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
 ];
+
+
+
 
 }

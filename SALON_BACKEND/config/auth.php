@@ -71,6 +71,18 @@ return [
         // ],
     ],
 
+    'providers' => [
+    'users' => [
+        'driver' => 'eloquent',
+        'model' => App\Models\Pelanggan::class,
+    ],
+    'admins' => [
+        'driver' => 'eloquent',
+        'model' => App\Models\Admin::class,
+    ],
+],
+
+
     /*
     |--------------------------------------------------------------------------
     | Resetting Passwords
