@@ -3,12 +3,15 @@
 namespace App\Http\Middleware;
 
 use Closure;
+use Illuminate\Support\Facades\Auth; // ← PERBAIKI DI SINI
 
 class PelangganMiddleware
 {
     public function handle($request, Closure $next)
     {
-        if (auth()->user() && auth()->user()->role === 'pelanggan') {
+        $user = Auth::user();
+
+        if ($user instanceof \App\Models\Pelanggan) {
             return $next($request);
         }
 

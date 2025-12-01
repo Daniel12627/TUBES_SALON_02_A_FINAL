@@ -7,7 +7,7 @@ use Laravel\Sanctum\HasApiTokens;
 
 class Admin extends Authenticatable
 {
-    use HasApiTokens;
+    use HasApiTokens, Notifiable;
 
     protected $table = 'admin';
     protected $primaryKey = 'id_admin';

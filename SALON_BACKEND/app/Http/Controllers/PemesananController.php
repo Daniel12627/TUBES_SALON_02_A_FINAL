@@ -11,14 +11,18 @@ class PemesananController extends Controller
     {
         $user = auth()->user();
 
+        // Admin bisa lihat semua pemesanan
         if ($user instanceof \App\Models\Admin) {
-            return response()->json(Pemesanan::with(['pelanggan', 'layanan', 'pegawai'])->get());
+            return response()->json(
+                Pemesanan::with(['pelanggan', 'layanan', 'pegawai'])->get()
+            );
         }
 
+        // Pelanggan hanya bisa lihat miliknya sendiri
         return response()->json(
             Pemesanan::with(['layanan', 'pegawai'])
-            ->where('id_pelanggan', $user->id_pelanggan)
-            ->get()
+                ->where('id_pelanggan', $user->id_pelanggan)
+                ->get()
         );
     }
 
@@ -31,8 +35,10 @@ class PemesananController extends Controller
             'jam_booking' => 'required'
         ]);
 
+        $user = auth()->user();
+
         $pemesanan = Pemesanan::create([
-            'id_pelanggan' => auth()->user()->id_pelanggan,
+            'id_pelanggan' => $user->id_pelanggan,
             'id_layanan' => $request->id_layanan,
             'id_pegawai' => $request->id_pegawai,
             'tanggal_pemesanan' => now(),
@@ -41,7 +47,10 @@ class PemesananController extends Controller
             'status_pemesanan' => 'pending'
         ]);
 
-        return response()->json(['message' => 'Pemesanan berhasil', 'data' => $pemesanan]);
+        return response()->json([
+            'message' => 'Pemesanan berhasil dibuat',
+            'data' => $pemesanan
+        ]);
     }
 
     public function update(Request $request)
@@ -55,9 +64,24 @@ class PemesananController extends Controller
         ]);
 
         $pemesanan = Pemesanan::find($request->id_pemesanan);
-        $pemesanan->update($request->all());
 
-        return response()->json(['message' => 'Update berhasil', 'data' => $pemesanan]);
+        // Cegah pelanggan update milik orang lain
+        $user = auth()->user();
+        if ($user instanceof \App\Models\Pelanggan && $pemesanan->id_pelanggan !== $user->id_pelanggan) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $pemesanan->update([
+            'id_layanan' => $request->id_layanan,
+            'id_pegawai' => $request->id_pegawai,
+            'tanggal_booking' => $request->tanggal_booking,
+            'jam_booking' => $request->jam_booking
+        ]);
+
+        return response()->json([
+            'message' => 'Pemesanan berhasil diperbarui',
+            'data' => $pemesanan
+        ]);
     }
 
     public function destroy($id)
@@ -68,7 +92,15 @@ class PemesananController extends Controller
             return response()->json(['message' => 'Data tidak ditemukan'], 404);
         }
 
+        $user = auth()->user();
+
+        // Hanya Admin dan Pelanggan terkait yang boleh hapus
+        if ($user instanceof \App\Models\Pelanggan && $pemesanan->id_pelanggan !== $user->id_pelanggan) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
         $pemesanan->delete();
+
         return response()->json(['message' => 'Berhasil dihapus']);
     }
 }

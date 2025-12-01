@@ -13,15 +13,17 @@ class PembayaranController extends Controller
         $user = auth()->user();
 
         if ($user instanceof \App\Models\Admin) {
-            return response()->json(Pembayaran::with(['pemesanan.layanan', 'pemesanan.pelanggan', 'pemesanan.pegawai'])->get());
+            return response()->json(
+                Pembayaran::with(['pemesanan.layanan', 'pemesanan.pelanggan', 'pemesanan.pegawai'])->get()
+            );
         }
 
         return response()->json(
             Pembayaran::with(['pemesanan.layanan'])
-            ->whereHas('pemesanan', fn($q) =>
-                $q->where('id_pelanggan', $user->id_pelanggan)
-            )
-            ->get()
+                ->whereHas('pemesanan', function ($q) use ($user) {
+                    $q->where('id_pelanggan', $user->id_pelanggan);
+                })
+                ->get()
         );
     }
 
@@ -32,17 +34,23 @@ class PembayaranController extends Controller
             'metode_pembayaran' => 'required'
         ]);
 
+        $user = auth()->user();
+
         $order = Pemesanan::with('layanan')
             ->where('id_pemesanan', $request->id_pemesanan)
-            ->where('id_pelanggan', auth()->user()->id_pelanggan)
+            ->where('id_pelanggan', $user->id_pelanggan)
             ->first();
 
         if (!$order) {
             return response()->json(['message' => 'Pemesanan tidak sesuai akun'], 403);
         }
 
-        $pay = Pembayaran::create([
-            'id_pemesanan' => $request->id_pemesanan,
+        if (Pembayaran::where('id_pemesanan', $order->id_pemesanan)->exists()) {
+            return response()->json(['message' => 'Pemesanan sudah dibayar'], 409);
+        }
+
+        $payment = Pembayaran::create([
+            'id_pemesanan' => $order->id_pemesanan,
             'metode_pembayaran' => $request->metode_pembayaran,
             'total_bayar' => $order->layanan->harga,
             'tanggal_pembayaran' => now(),
@@ -51,11 +59,16 @@ class PembayaranController extends Controller
 
         $order->update(['status_pemesanan' => 'selesai']);
 
-        return response()->json(['message' => 'Pembayaran berhasil!', 'data' => $pay]);
+        return response()->json([
+            'message' => 'Pembayaran berhasil!',
+            'data' => $payment
+        ]);
     }
 
     public function totalPendapatan()
     {
-        return response()->json(['total' => Pembayaran::sum('total_bayar')]);
+        return response()->json([
+            'total' => Pembayaran::sum('total_bayar')
+        ]);
     }
 }
